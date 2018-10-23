@@ -4,21 +4,27 @@ import argparse
 def parse_opt():
     parser = argparse.ArgumentParser()
     # Data input settings
+    # parser.add_argument(
+    #     '--input_json',
+    #     type=str,
+    #     default='data/videodatainfo_2017.json',
+    #     help='path to the json file containing video info')
+    # parser.add_argument(
+    #     '--info_json',
+    #     type=str,
+    #     default='data/info.json',
+    #     help='path to the json file containing additional info and vocab')
+    # parser.add_argument(
+    #     '--caption_json',
+    #     type=str,
+    #     default='data/caption.json',
+    #     help='path to the processed video caption json')
     parser.add_argument(
-        '--input_json',
+        '--dataset_json',
         type=str,
-        default='data/videodatainfo_2017.json',
-        help='path to the json file containing video info')
-    parser.add_argument(
-        '--info_json',
-        type=str,
-        default='data/info.json',
-        help='path to the json file containing additional info and vocab')
-    parser.add_argument(
-        '--caption_json',
-        type=str,
-        default='data/caption.json',
-        help='path to the processed video caption json')
+        default='data/dataset_msvd.json',
+        help='Path to processed dataset json.'
+    )
 
     parser.add_argument(
         '--feats_dir',
@@ -94,7 +100,7 @@ def parse_opt():
     parser.add_argument(
         '--epochs', type=int, default=6001, help='number of epochs')
     parser.add_argument(
-        '--batch_size', type=int, default=128, help='minibatch size')
+        '--batch_size', type=int, default=16, help='minibatch size')
     parser.add_argument(
         '--grad_clip',
         type=float,
