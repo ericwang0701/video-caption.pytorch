@@ -26,3 +26,7 @@ python process_features.py /path/to/written/frames /path/to/write/features --typ
 
 Batch size parameter `-bs` can be used to adjust batch size in case you run out of memory. The default of 8 uses around 10gb. Smaller batch size = less memory, but will take longer. 
 
+Now process the dataset file. We will use a pkl file from [arctic-capgen-vid](https://github.com/yaoli/arctic-capgen-vid). [Download Link](http://lisaweb.iro.umontreal.ca/transfert/lisa/users/yaoli/youtube2text_iccv15.zip) 
+```bash
+python process_dataset.py --gtdict /path/to/downloaded/youtube2text_iccv15/dict_movieID_caption.pkl
+```
