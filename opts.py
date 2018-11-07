@@ -46,7 +46,7 @@ def parse_opt():
 
     # Model settings
     parser.add_argument(
-        "--model", type=str, default='S2VTModel', help="with model to use")
+        "--model", type=str, default='S2VTAttModel', help="with model to use")
 
     parser.add_argument(
         "--max_len",
@@ -100,7 +100,7 @@ def parse_opt():
     parser.add_argument(
         '--epochs', type=int, default=6001, help='number of epochs')
     parser.add_argument(
-        '--batch_size', type=int, default=16, help='minibatch size')
+        '--batch_size', type=int, default=64, help='minibatch size')
     parser.add_argument(
         '--grad_clip',
         type=float,

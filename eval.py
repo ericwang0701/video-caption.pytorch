@@ -36,7 +36,7 @@ def test(model, crit, dataset, vocab, opt):
     #results = []
     samples = {}
     for index, data in enumerate(loader):
-        print 'batch: '+str((index+1)*opt["batch_size"])
+        print('batch: '+str((index+1)*opt["batch_size"]))
         # forward the model to get loss
         fc_feats = Variable(data['fc_feats'], volatile=True).cuda()
         labels = Variable(data['labels'], volatile=True).long().cuda()
@@ -69,7 +69,7 @@ def test(model, crit, dataset, vocab, opt):
     result['sum'] = str(score_sum)
     #result = OrderedDict(result, **valid_score)
     result = OrderedDict(result.items() + valid_score.items())
-    print result
+    print(result)
     if not os.path.exists(opt["results_path"]):
         os.makedirs(opt["results_path"])
     with open(os.path.join(opt["results_path"], "scores.txt"), 'a') as scores_table:
