@@ -5,6 +5,7 @@ import os
 import numpy as np
 import torch
 from torch.utils.data import Dataset
+from torch.autograd import Variable
 
 
 class CocoDataset(Dataset):
@@ -86,7 +87,11 @@ class VideoDataset(Dataset):
         # Subsampling
         samples = np.round(np.linspace(
             0, fc_feat.shape[0] - 1, self.n_frame_steps)).astype(np.int32)
-        fc_feat = fc_feat[samples, :]
+        try:
+            fc_feat = fc_feat[samples, :]
+        except Exception as e:
+            print("Bad feature file in dataset. Purge, re-process, and try again.")
+            raise e
 
         # if self.with_c3d == 1:
         #     c3d_feat = np.load(os.path.join(self.c3d_feats_dir, 'video%i.npy'%(ix)))
@@ -119,10 +124,10 @@ class VideoDataset(Dataset):
         mask[:int(non_zero[0]) + 1] = 1
 
         data = {}
-        data['fc_feats'] = torch.from_numpy(fc_feat).type(torch.FloatTensor)
-        data['labels'] = label
-        data['masks'] = mask
+        data['fc_feats'] = Variable(torch.from_numpy(fc_feat).type(torch.FloatTensor))
         # Just need to sample one gt for now. Eventually incorporate n captions (for fixed n)
+        data['labels'] = Variable(label.long())
+        data['masks'] = Variable(mask)
         # data['gts'] = gts
         data['video_ids'] = ix
         return data

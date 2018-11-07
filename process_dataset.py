@@ -84,6 +84,7 @@ def process_msvd(dict_path):
     """
     gtdict = pickle.load(open(dict_path, 'rb'), encoding='bytes')
     ids = [i.decode() for i in gtdict.keys()]
+    # The split is completely arbitrary for now. Should use what Li Yao had.
     split_to_ids = {'train': [ids[i] for i in range(0, 1500)],
                     'val': [ids[i] for i in range(1500, 1600)],
                     'test': [ids[i] for i in range(1600, 1970)]}

@@ -101,7 +101,9 @@ class DecoderRNN(nn.Module):
                     context = self.attention(decoder_hidden.squeeze(0), encoder_outputs)
                 decoder_input = torch.cat([current_words, context], dim=1)
                 decoder_input = self.input_dropout(decoder_input).unsqueeze(1)
-                self.rnn.flatten_parameters()
+                # flatten params is in-place, but you can't have two consecutive in-place ops in the graph.
+                # TODO: Figure out workaround
+                # self.rnn.flatten_parameters()
                 decoder_output, decoder_hidden = self.rnn(
                     decoder_input, decoder_hidden)
                 logprobs = F.log_softmax(

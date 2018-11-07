@@ -17,7 +17,13 @@ from torch.utils.data import DataLoader
 
 def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
     model.train()
-    model = nn.DataParallel(model)
+    if torch.cuda.device_count() > 1:
+        print("{} devices detected, switch to parallel model.".format(torch.cuda.device_count()))
+        model = nn.DataParallel(model)
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
     for epoch in range(opt["epochs"]):
         lr_scheduler.step()
 
@@ -31,11 +37,10 @@ def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
 
         for data in loader:
             torch.cuda.synchronize()
-            fc_feats = Variable(data['fc_feats']).cuda()
-            labels = Variable(data['labels']).long().cuda()
-            masks = Variable(data['masks']).cuda()
+            fc_feats = data['fc_feats'].to(device)
+            labels = data['labels'].to(device)
+            masks = data['masks'].to(device)
 
-            optimizer.zero_grad()
             if not sc_flag:
                 seq_probs, _ = model(fc_feats, labels, 'train')
                 loss = crit(seq_probs, labels[:, 1:], masks[:, 1:])
@@ -49,6 +54,7 @@ def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
                                Variable(
                                    torch.from_numpy(reward).float().cuda()))
 
+            optimizer.zero_grad()
             loss.backward()
             utils.clip_gradient(optimizer, opt["grad_clip"])
             optimizer.step()
@@ -127,7 +133,7 @@ if __name__ == '__main__':
     opt = opts.parse_opt()
     opt = vars(opt)
     for key, value in opt.items():
-        print key, value
+        print(key, value)
     os.environ['CUDA_VISIBLE_DEVICES'] = opt["gpu"]
     opt_json = os.path.join(opt["checkpoint_path"], 'opt_info.json')
     if not os.path.exists(opt["checkpoint_path"]):
@@ -135,4 +141,7 @@ if __name__ == '__main__':
     with open(opt_json, 'w') as f:
         json.dump(opt, f)
     print('save opt details to %s' % (opt_json))
-    main(opt)
+    try:
+        main(opt)
+    except Exception as e:
+        raise e
