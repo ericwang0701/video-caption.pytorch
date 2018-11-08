@@ -102,7 +102,7 @@ class DecoderRNN(nn.Module):
                 decoder_input = torch.cat([current_words, context], dim=1)
                 decoder_input = self.input_dropout(decoder_input).unsqueeze(1)
                 # flatten params is in-place, but you can't have two consecutive in-place ops in the graph.
-                # TODO: Figure out workaround
+                # TODO: This is already performed in RNNBase, no need to do twice
                 # self.rnn.flatten_parameters()
                 decoder_output, decoder_hidden = self.rnn(
                     decoder_input, decoder_hidden)

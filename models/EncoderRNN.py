@@ -56,7 +56,7 @@ class EncoderRNN(nn.Module):
         vid_feats = self.input_dropout(vid_feats)
         vid_feats = vid_feats.view(batch_size, seq_len, self.dim_hidden)
         # flatten params is in-place, but you can't have two consecutive in-place ops in the graph.
-        # TODO: Figure out workaround
+        # TODO: This is already performed in RNNBase, no need to do twice
         # self.rnn.flatten_parameters()
         output, hidden = self.rnn(vid_feats)
         return output, hidden
