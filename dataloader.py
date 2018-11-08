@@ -6,6 +6,8 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torch.autograd import Variable
+from multiprocessing import Pool
+from multiprocessing import Queue
 
 
 class CocoDataset(Dataset):
@@ -30,6 +32,15 @@ class CocoDataset(Dataset):
         return len(self.coco_labels)
 
 
+pool_queue = Queue()
+work = []
+
+
+def _threaded_sample_load(vid_id, fpath, n_frame_steps):
+    fc_feat = load_and_subsample_feat(fpath, n_frame_steps)
+    pool_queue.put((vid_id, fc_feat))
+
+
 class VideoDataset(Dataset):
 
     def get_vocab_size(self):
@@ -49,7 +60,7 @@ class VideoDataset(Dataset):
 
         # load the json file which contains information about the dataset
         self.dataset_meta = json.load(open(opt["dataset_json"]))
-        self.captions = self.dataset_meta['vid_to_meta']
+        self.vid_to_meta = self.dataset_meta['vid_to_meta']
         self.ix_to_word = self.dataset_meta['ix_to_word']
         self.word_to_ix = self.dataset_meta['word_to_ix']
         print('vocab size is ', len(self.ix_to_word))
@@ -66,6 +77,26 @@ class VideoDataset(Dataset):
         self.max_len = opt["max_len"]
         print('max sequence length in data is', self.max_len)
 
+        # Memory cache for features
+        print("Pre-cache {} features in memory.".format(len(self.splits[mode])))
+        self._feat_cache = {}
+        # pool = Pool(16)
+
+        for fid in self.splits[mode]:
+            fc_feat_path = os.path.join(self.feats_dir, fid)
+            fc_feat = load_and_subsample_feat(fc_feat_path, self.n_frame_steps)
+            self._feat_cache[fid] = fc_feat
+            # work.append((fid, fc_feat_path, self.n_frame_steps))
+        # pool.starmap(_threaded_sample_load, work)
+        # pool.close()
+        # pool.join()
+
+        # while not pool_queue.empty():
+        #     key, feat = pool_queue.get()
+        #     self._feat_cache[key] = feat
+
+        print("Finished initializing dataloader.")
+
     def __getitem__(self, ix):
         """This function returns a tuple that is further passed to collate_fn
         """
@@ -80,18 +111,14 @@ class VideoDataset(Dataset):
         # for dir in self.feats_dir:
         #     fc_feat.append(np.load(os.path.join(dir, 'video%i.npy' % (ix))))
 
-        fc_feat_path = os.path.join(self.feats_dir, vid_id)
-        fc_feat = np.load(fc_feat_path)
-        # fc_feat = np.concatenate(fc_feat, axis=1)
+        if vid_id not in self._feat_cache.keys():
+            fc_feat_path = os.path.join(self.feats_dir, vid_id)
+            fc_feat = load_and_subsample_feat(fc_feat_path)
+            self._feat_cache[vid_id] = fc_feat
+        else:
+            fc_feat = self._feat_cache[vid_id]
 
-        # Subsampling
-        samples = np.round(np.linspace(
-            0, fc_feat.shape[0] - 1, self.n_frame_steps)).astype(np.int32)
-        try:
-            fc_feat = fc_feat[samples, :]
-        except Exception as e:
-            print("Bad feature file in dataset. Purge, re-process, and try again.")
-            raise e
+        # fc_feat = np.concatenate(fc_feat, axis=1)
 
         # if self.with_c3d == 1:
         #     c3d_feat = np.load(os.path.join(self.c3d_feats_dir, 'video%i.npy'%(ix)))
@@ -103,7 +130,7 @@ class VideoDataset(Dataset):
         #         fc_feat = np.concatenate((fc_feat, c3d_feat[samples, :]), axis=1)
         # label = torch.zeros(self.max_len)
         mask = torch.zeros(self.max_len)
-        captions = self.captions[vid_id]['final_captions']
+        captions = self.vid_to_meta[vid_id]['final_captions']
         gts = torch.zeros(len(captions), self.max_len).long()
         for i, cap in enumerate(captions):
             if len(cap) > self.max_len:
@@ -134,3 +161,16 @@ class VideoDataset(Dataset):
 
     def __len__(self):
         return len(self.splits[self.mode])
+
+
+def load_and_subsample_feat(fc_feat_path, n_frame_steps=28):
+    fc_feat = np.load(fc_feat_path)
+    # Subsampling
+    samples = np.round(np.linspace(
+        0, fc_feat.shape[0] - 1, n_frame_steps)).astype(np.int32)
+    try:
+        fc_feat = fc_feat[samples, :]
+    except Exception as e:
+        print("Bad feature file in dataset: {}. Purge, re-process, and try again.".format(fc_feat_path))
+        raise e
+    return fc_feat

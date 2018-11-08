@@ -30,3 +30,22 @@ Now process the dataset file. We will use a pkl file from [arctic-capgen-vid](ht
 ```bash
 python process_dataset.py --gtdict /path/to/downloaded/youtube2text_iccv15/dict_movieID_caption.pkl
 ```
+
+## Patches
+
+Some quick patches for coco-caption before we continue:
+
+Enter `coco-caption/pycocoevalcap/meteor` and try running
+
+```bash
+java -jar -Xmx2G meteor-1.5.jar -- -stdio -l en -norm
+``` 
+
+You might get an error complaining about a data file. To fix download the `.gz` file it expects:
+https://github.com/lichengunc/refer/tree/master/evaluation/meteor/data
+to `coco-caption/pycocoevalcap/meteor/data/`
+
+If its java related, make sure you have java working first since coco-caption relies on it. 
+
+Also add `self.meteor_p.kill()` after this line to avoid an old memory leak: 
+https://github.com/tylin/coco-caption/blob/master/pycocoevalcap/meteor/meteor.py#L44
