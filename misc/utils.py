@@ -10,7 +10,7 @@ def decode_sequence(ix_to_word, seq):
     for i in range(N):
         txt = ''
         for j in range(D):
-            ix = seq[i, j].data.cpu().numpy()[0]
+            ix = int(seq[i, j].data.cpu().numpy())
             if ix > 0:
                 if j >= 1:
                     txt = txt + ' '

@@ -9,75 +9,84 @@ from models import EncoderRNN, DecoderRNN, S2VTAttModel, S2VTModel
 from dataloader import VideoDataset
 import misc.utils as utils
 from misc.cocoeval import suppress_stdout_stderr, COCOScorer
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from pandas.io.json import json_normalize
 
 
-def convert_data_to_coco_scorer_format(data_frame):
-    gts = {}
-    for row in zip(data_frame["caption"], data_frame["video_id"]):
-        if row[1] in gts:
-            gts[row[1]].append(
-                {'image_id': row[1], 'cap_id': len(gts[row[1]]), 'caption': row[0]})
-        else:
-            gts[row[1]] = []
-            gts[row[1]].append(
-                {'image_id': row[1], 'cap_id': len(gts[row[1]]), 'caption': row[0]})
+def convert_data_to_coco_scorer_format(vid_ids, vid_to_meta):
+    gts = defaultdict(list)
+
+    for i in vid_ids:
+        captions = vid_to_meta[i]["final_captions"]
+        for j, cap in enumerate(captions):
+            gts[i].append({'image_id': i, 'cap_id': j, 'caption': ' '.join(cap)})
+
     return gts
 
 
 def test(model, crit, dataset, vocab, opt):
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     model.eval()
     loader = DataLoader(dataset, batch_size=opt["batch_size"], shuffle=False)
     scorer = COCOScorer()
-    gt_dataframe = json_normalize(
-        json.load(open(opt["input_json"]))['sentences'])
-    gts = convert_data_to_coco_scorer_format(gt_dataframe)
+    dataset_meta = json.load(open(opt["dataset_json"]))
+
+    vid_to_meta = dataset_meta["vid_to_meta"]
+    vid_ids = dataset_meta["split_to_ids"]["test"]
+
+    # gt_dataframe = json_normalize(json.load(open(opt["dataset_json"]))['sentences'])
+    gts = convert_data_to_coco_scorer_format(vid_ids, vid_to_meta)
     #results = []
     samples = {}
-    for index, data in enumerate(loader):
-        print('batch: '+str((index+1)*opt["batch_size"]))
-        # forward the model to get loss
-        fc_feats = Variable(data['fc_feats'], volatile=True).cuda()
-        labels = Variable(data['labels'], volatile=True).long().cuda()
-        masks = Variable(data['masks'], volatile=True).cuda()
-        video_ids = data['video_ids']
-      
-        # forward the model to also get generated samples for each image
-        seq_probs, seq_preds = model(
-            fc_feats, mode='inference', opt=opt)
-        # print(seq_preds)
 
-        sents = utils.decode_sequence(vocab, seq_preds)
+    with torch.no_grad():
+        for index, data in enumerate(loader):
+            print('batch: '+str((index+1)*opt["batch_size"]))
+            # forward the model to get loss
+            fc_feats = data['fc_feats'].to(device)
+            video_id = data['video_ids'].cpu()
 
-        for k, sent in enumerate(sents):
-            video_id = video_ids[k]
-            samples[video_id] = [{'image_id': video_id, 'caption': sent}]
-        # break
+            # forward the model to also get generated samples for each image
+            seq_probs, seq_preds = model(fc_feats, mode='inference', opt=opt)
+
+            sents = utils.decode_sequence(vocab, seq_preds)
+
+            for k, sent in enumerate(sents):
+                # Iter through each video in batch and convert id back to original msvd key
+                vid_key = vid_ids[video_id[k]]
+                samples[vid_key] = [{'image_id': vid_key, 'caption': sent}]
+
     with suppress_stdout_stderr():
         valid_score = scorer.score(gts, samples, samples.keys())
-    #results.append(valid_score)
-    #print(valid_score)
 
-    if not os.path.exists(opt["results_path"]):
-        os.makedirs(opt["results_path"])
-    result = OrderedDict()
-    result['checkpoint'] = opt["saved_model"][opt["saved_model"].rfind('/')+1:]
-    score_sum = 0
-    for key, value in valid_score.items():
-        score_sum += float(value)
-    result['sum'] = str(score_sum)
-    #result = OrderedDict(result, **valid_score)
-    result = OrderedDict(result.items() + valid_score.items())
-    print(result)
-    if not os.path.exists(opt["results_path"]):
-        os.makedirs(opt["results_path"])
-    with open(os.path.join(opt["results_path"], "scores.txt"), 'a') as scores_table:
-        scores_table.write(json.dumps(result) + "\n")
-    with open(os.path.join(opt["results_path"],
-                           opt["model"].split("/")[-1].split('.')[0] + ".json"), 'w') as prediction_results:
-        json.dump({"predictions": samples, "scores": valid_score},
-                  prediction_results)
+    print(valid_score)
+
+    # TODO: Make this usable eventually
+    # if not os.path.exists(opt["results_path"]):
+    #     os.makedirs(opt["results_path"])
+    #
+    # result = OrderedDict()
+    # result['checkpoint'] = opt["saved_model"][opt["saved_model"].rfind('/')+1:]
+    #
+    # score_sum = 0
+    #
+    # for key, value in valid_score.items():
+    #     score_sum += float(value)
+    #
+    # result['sum'] = str(score_sum)
+    #
+    # #result = OrderedDict(result, **valid_score)
+    # result = OrderedDict(result.items() + valid_score.items())
+    # print(result)
+    # if not os.path.exists(opt["results_path"]):
+    #     os.makedirs(opt["results_path"])
+    # with open(os.path.join(opt["results_path"], "scores.txt"), 'a') as scores_table:
+    #     scores_table.write(json.dumps(result) + "\n")
+    # with open(os.path.join(opt["results_path"],
+    #                        opt["model"].split("/")[-1].split('.')[0] + ".json"), 'w') as prediction_results:
+    #     json.dump({"predictions": samples, "scores": valid_score},
+    #               prediction_results)
 
 
 def main(opt):
@@ -91,7 +100,7 @@ def main(opt):
                           n_layers=opt['num_layers'],
                           rnn_cell=opt['rnn_type'],
                           bidirectional=opt["bidirectional"],
-                          rnn_dropout_p=opt["rnn_dropout_p"]).cuda()
+                          rnn_dropout_p=opt["rnn_dropout_p"])
     elif opt["model"] == "S2VTAttModel":
         encoder = EncoderRNN(opt["dim_vid"], opt["dim_hidden"],
                              n_layers=opt['num_layers'],
@@ -101,8 +110,17 @@ def main(opt):
                              n_layers=opt['num_layers'],
                              rnn_cell=opt['rnn_type'], input_dropout_p=opt["input_dropout_p"],
                              rnn_dropout_p=opt["rnn_dropout_p"], bidirectional=opt["bidirectional"])
-        model = S2VTAttModel(encoder, decoder).cuda()
-    model = nn.DataParallel(model)
+        model = S2VTAttModel(encoder, decoder)
+    else:
+        return
+
+    if torch.cuda.device_count() > 1:
+        print("{} devices detected, switch to parallel model.".format(torch.cuda.device_count()))
+        model = nn.DataParallel(model)
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
     # Setup the model
     model.load_state_dict(torch.load(opt["saved_model"]))
     crit = utils.LanguageModelCriterion()
