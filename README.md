@@ -2,11 +2,28 @@
 
 This is a re-tooled fork of a [discontinued repo by Sundrops](https://github.com/Sundrops/video-caption.pytorch).
 
-The goal is to have something basic for quick video captioning experiments in PyTorch, while still implementing encoder-decoder framework and attention mechanism, on top of being somewhat updated (having CUDA 9 support, for starters).
+The goal is to have something basic for quick video captioning experiments in PyTorch, while still implementing encoder-decoder framework and attention mechanism, and being somewhat updated (having latest PyTorch and CUDA 9 support, for starters).
+
+## News:
+
+[Click here for announced project data (OneDrive)](https://uflorida-my.sharepoint.com/:f:/g/personal/w_garcia_ufl_edu/EuBZsdxZ7BdGva2vP14AlX8BBm4E4uM5SEnu3sogkl_C2g?e=46OBvy)
+
+- `save/`: model checkpoints
+- `data/`: preprocessed features for datasets along with their JSON meta files. 
+
+For any model folder, just check `opt_info.json` in the folder for model configuration details. 
+
+Date | Announcement
+:----:|:-----------------------------------:|
+Nov 8 2018 | Pretrained model and NasNet-A Large features now available for MSVD. Ran for 1000 epochs. Bleu4=0.38.  
 
 
 
-## Data processing
+# Setup:
+
+If you just want to caption some of your own videos skip to step 5. To train and evaluate on datasets, start at 1.
+
+## 1. Data processing
 
 Borrowed some scripts from [VideoToTextDNN](https://github.com/OSUPCVLab/VideoToTextDNN).
 
@@ -31,9 +48,9 @@ Now process the dataset file. We will use a pkl file from [arctic-capgen-vid](ht
 python process_dataset.py --gtdict /path/to/downloaded/youtube2text_iccv15/dict_movieID_caption.pkl
 ```
 
-## Patches
+## 2. Patches
 
-Some quick patches for coco-caption before we continue:
+Some quick but important patches for coco-caption, the caption eval scorer, before we continue:
 
 Enter `coco-caption/pycocoevalcap/meteor` and try running
 
@@ -49,3 +66,9 @@ If its java related, make sure you have java working first since coco-caption re
 
 Also add `self.meteor_p.kill()` after this line to avoid an old memory leak: 
 https://github.com/tylin/coco-caption/blob/master/pycocoevalcap/meteor/meteor.py#L44
+
+## 3. Training
+
+## 4. Eval
+
+## 5. Inference
