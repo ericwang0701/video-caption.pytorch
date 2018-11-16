@@ -6,7 +6,7 @@ The goal is to have something basic for quick video captioning experiments in Py
 
 ## News:
 
-[Click here for announced project data (OneDrive)](https://uflorida-my.sharepoint.com/:f:/g/personal/w_garcia_ufl_edu/EuBZsdxZ7BdGva2vP14AlX8BBm4E4uM5SEnu3sogkl_C2g?e=46OBvy)
+[Click here for announced project data (OneDrive)](https://uflorida-my.sharepoint.com/:f:/g/personal/w_garcia_ufl_edu/EuBZsdxZ7BdGva2vP14AlX8BdUKofmFLNE71mrFUF8mIhA?e=RemxDn)
 
 - `save/`: model checkpoints
 - `data/`: preprocessed features for datasets along with their JSON meta files. 
