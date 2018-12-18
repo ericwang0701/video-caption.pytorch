@@ -72,28 +72,29 @@ class VideoDataset(Dataset):
         self.feats_dir = opt["feats_dir"][0]
         # self.c3d_feats_dir = opt['c3d_feats_dir']
         # self.with_c3d = opt['with_c3d']
-        print('load feats from %s' % (self.feats_dir))
         # load in the sequence data
         self.max_len = opt["max_len"]
         print('max sequence length in data is', self.max_len)
 
-        # Memory cache for features
-        print("Pre-cache {} features in memory.".format(len(self.splits[mode])))
-        self._feat_cache = {}
-        # pool = Pool(16)
+        if self.mode != 'sample':
+            print('load feats from %s' % (self.feats_dir))
+            # Memory cache for features
+            print("Pre-cache {} features in memory.".format(len(self.splits[mode])))
+            self._feat_cache = {}
+            # pool = Pool(16)
 
-        for fid in self.splits[mode]:
-            fc_feat_path = os.path.join(self.feats_dir, fid)
-            fc_feat = load_and_subsample_feat(fc_feat_path, self.n_frame_steps)
-            self._feat_cache[fid] = fc_feat
-            # work.append((fid, fc_feat_path, self.n_frame_steps))
-        # pool.starmap(_threaded_sample_load, work)
-        # pool.close()
-        # pool.join()
+            for fid in self.splits[mode]:
+                fc_feat_path = os.path.join(self.feats_dir, fid)
+                fc_feat = load_and_subsample_feat(fc_feat_path, self.n_frame_steps)
+                self._feat_cache[fid] = fc_feat
+                # work.append((fid, fc_feat_path, self.n_frame_steps))
+            # pool.starmap(_threaded_sample_load, work)
+            # pool.close()
+            # pool.join()
 
-        # while not pool_queue.empty():
-        #     key, feat = pool_queue.get()
-        #     self._feat_cache[key] = feat
+            # while not pool_queue.empty():
+            #     key, feat = pool_queue.get()
+            #     self._feat_cache[key] = feat
 
         print("Finished initializing dataloader.")
 

@@ -165,11 +165,11 @@ def create_batches(frames_to_do, load_img_fn, tf_img_fn, batch_size=8):
 
     for idx in range(0, n, batch_size):
         frames_idx = list(range(idx, min(idx+batch_size, n)))
-        batch_frame_paths = frames_to_do[frames_idx]
+        batch_frames = frames_to_do[frames_idx]
 
-        batch_tensor = torch.zeros((len(batch_frame_paths),) + tuple(tf_img_fn.input_size))
-        for i, frame_path in enumerate(batch_frame_paths):
-            input_img = load_img_fn(frame_path)
+        batch_tensor = torch.zeros((len(batch_frames),) + tuple(tf_img_fn.input_size))
+        for i, frame_ in enumerate(batch_frames):
+            input_img = load_img_fn(frame_)
             input_tensor = tf_img_fn(input_img)  # 3x400x225 -> 3x299x299 size may differ
             # input_tensor = input_tensor.unsqueeze(0)  # 3x299x299 -> 1x3x299x299
             batch_tensor[i] = input_tensor
