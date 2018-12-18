@@ -76,7 +76,7 @@ class VideoDataset(Dataset):
         self.max_len = opt["max_len"]
         print('max sequence length in data is', self.max_len)
 
-        if self.mode != 'sample':
+        if self.mode != 'inference':
             print('load feats from %s' % (self.feats_dir))
             # Memory cache for features
             print("Pre-cache {} features in memory.".format(len(self.splits[mode])))

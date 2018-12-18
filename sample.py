@@ -3,18 +3,17 @@ import os
 import argparse
 import skvideo.io
 import torch
-import pretrainedmodels
-import PIL
 import misc.utils as utils
-import numpy as np
+import PIL
 from models import EncoderRNN, DecoderRNN, S2VTAttModel, S2VTModel
 from dataloader import VideoDataset
 from pretrainedmodels import utils as ptm_utils
 from process_features import process_batches, create_batches
+from models.ConvS2VT import ConvS2VT
 
 
 def main(opt):
-    dataset = VideoDataset(opt, 'sample')
+    dataset = VideoDataset(opt, 'inference')
     opt["vocab_size"] = dataset.get_vocab_size()
     opt["seq_length"] = dataset.max_len
 
@@ -45,27 +44,18 @@ def main(opt):
 
     convnet = 'nasnetalarge'
     vocab = dataset.get_vocab()
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-    model.load_state_dict(torch.load(opt["saved_model"]))
+    full_decoder = ConvS2VT(convnet, model, opt)
 
-    feature_extractor = pretrainedmodels.__dict__[convnet](num_classes=1000, pretrained='imagenet')
-    feature_extractor.eval()
-    feature_extractor.to(device)
-
-    tf_img_fn = ptm_utils.TransformImage(feature_extractor)
+    tf_img_fn = ptm_utils.TransformImage(full_decoder.conv)
     load_img_fn = PIL.Image.fromarray
 
     for video_path in opt['videos']:
         print(video_path)
         with torch.no_grad():
             frames = skvideo.io.vread(video_path)
+            # bp ---
             batches = create_batches(frames, load_img_fn, tf_img_fn)
-            feats = process_batches(batches, convnet, [0], feature_extractor)
-            # TODO: Batch n videos and feed
-            feats = np.array([feats])
-            feats = torch.from_numpy(feats).to(device)
-            seq_probs, seq_preds = model(feats, mode='inference', opt=opt)
+            seq_prob, seq_preds = full_decoder(batches, mode='inference')
             sents = utils.decode_sequence(vocab, seq_preds)
 
             for sent in sents:
