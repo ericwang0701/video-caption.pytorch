@@ -6,7 +6,7 @@ The goal is to have something basic for quick video captioning experiments in Py
 
 ## News:
 
-[Click here for announced project data (OneDrive)](https://uflorida-my.sharepoint.com/:f:/g/personal/w_garcia_ufl_edu/EuBZsdxZ7BdGva2vP14AlX8BdUKofmFLNE71mrFUF8mIhA?e=RemxDn)
+[Click here for announced project data (OneDrive)](https://uflorida-my.sharepoint.com/:f:/g/personal/w_garcia_ufl_edu/EuBZsdxZ7BdGva2vP14AlX8BBm4E4uM5SEnu3sogkl_C2g?e=10cxVw)
 
 - `save/`: model checkpoints
 - `data/`: preprocessed features for datasets along with their JSON meta files. 
@@ -50,7 +50,7 @@ python process_dataset.py --gtdict /path/to/downloaded/youtube2text_iccv15/dict_
 
 ## 2. Patches
 
-Some quick but important patches for coco-caption, the caption eval scorer, before we continue:
+Some quick but important tests for coco-caption, the caption eval scorer, before we continue:
 
 Enter `coco-caption/pycocoevalcap/meteor` and try running
 
@@ -58,14 +58,12 @@ Enter `coco-caption/pycocoevalcap/meteor` and try running
 java -jar -Xmx2G meteor-1.5.jar -- -stdio -l en -norm
 ``` 
 
-You might get an error complaining about a data file. To fix download the `.gz` file it expects:
+You might get an error complaining about a data file. To fix re-download the `.gz` file it expects:
 https://github.com/lichengunc/refer/tree/master/evaluation/meteor/data
 to `coco-caption/pycocoevalcap/meteor/data/`
 
 If its java related, make sure you have java working first since coco-caption relies on it. 
 
-Also add `self.meteor_p.kill()` after this line to avoid an old memory leak: 
-https://github.com/tylin/coco-caption/blob/master/pycocoevalcap/meteor/meteor.py#L44
 
 ## 3. Training
 
