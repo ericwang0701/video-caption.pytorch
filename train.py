@@ -45,10 +45,8 @@ def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
                 seq_probs, _ = model(fc_feats, labels, 'train')
                 loss = crit(seq_probs, labels[:, 1:], masks[:, 1:])
             else:
-                seq_probs, seq_preds = model(
-                    fc_feats, mode='inference', opt=opt)
-                reward = get_self_critical_reward(model, fc_feats, data,
-                                                  seq_preds)
+                seq_probs, seq_preds = model(fc_feats, mode='inference', opt=opt)
+                reward = get_self_critical_reward(model, fc_feats, data, seq_preds)
                 print(reward.shape)
                 loss = rl_crit(seq_probs, seq_preds,
                                Variable(
@@ -82,7 +80,10 @@ def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
 
 def main(opt):
     dataset = VideoDataset(opt, 'train')
-    dataloader = DataLoader(dataset, batch_size=opt["batch_size"], shuffle=True)
+    dataloader = DataLoader(dataset,
+                            batch_size=opt["batch_size"],
+                            num_workers=16,
+                            shuffle=True)
     opt["vocab_size"] = dataset.get_vocab_size()
     if opt["model"] == 'S2VTModel':
         model = S2VTModel(

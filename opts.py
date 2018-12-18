@@ -100,7 +100,7 @@ def parse_opt():
     parser.add_argument(
         '--epochs', type=int, default=6001, help='number of epochs')
     parser.add_argument(
-        '--batch_size', type=int, default=64, help='minibatch size')
+        '--batch_size', type=int, default=128, help='minibatch size')
     parser.add_argument(
         '--grad_clip',
         type=float,

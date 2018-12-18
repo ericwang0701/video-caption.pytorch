@@ -43,6 +43,7 @@ class Meteor:
             scores.append(float(self.meteor_p.stdout.readline().decode().strip()))
         score = float(self.meteor_p.stdout.readline().decode().strip())
         self.lock.release()
+        self.meteor_p.kill()
 
         return score, scores
 
