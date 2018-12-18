@@ -5,16 +5,10 @@ import skvideo.io
 import torch
 import pretrainedmodels
 import PIL
+import misc.utils as utils
 import numpy as np
-from torch import nn
-from torch.autograd import Variable
-from torch.utils.data import DataLoader
 from models import EncoderRNN, DecoderRNN, S2VTAttModel, S2VTModel
 from dataloader import VideoDataset
-import misc.utils as utils
-from misc.cocoeval import suppress_stdout_stderr, COCOScorer
-from collections import OrderedDict, defaultdict
-from pandas.io.json import json_normalize
 from pretrainedmodels import utils as ptm_utils
 from process_features import process_batches, create_batches
 
