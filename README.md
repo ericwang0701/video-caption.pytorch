@@ -6,7 +6,9 @@ The goal is to have something basic for quick video captioning experiments in Py
 
 ## News:
 
-[Click here for announced project data (OneDrive)](https://uflorida-my.sharepoint.com/:f:/g/personal/w_garcia_ufl_edu/EuBZsdxZ7BdGva2vP14AlX8BBm4E4uM5SEnu3sogkl_C2g?e=10cxVw)
+[Click here for checkpoint data (OneDrive)](https://uflorida-my.sharepoint.com/:f:/g/personal/w_garcia_ufl_edu/Eu4KpW1VhKBAsVLkqIeD4nQBaxNNB6ARL2urf_9iwXW84Q?e=2t4GCY)
+
+[Click here for processed data (OneDrive)](https://uflorida-my.sharepoint.com/:f:/g/personal/w_garcia_ufl_edu/EtsH20EimedMm39B-Lj-5RMBuSCLH6-cmbOkqJ2HIAX5zA?e=cmm9td)
 
 - `save/`: model checkpoints
 - `data/`: preprocessed features for datasets along with their JSON meta files. 
@@ -67,6 +69,12 @@ If its java related, make sure you have java working first since coco-caption re
 
 ## 3. Training
 
+Use `train.py`, see `opts.py` for arguments.
+
 ## 4. Eval
 
+Use `eval.py`, see bottom of script for arguments.
+
 ## 5. Inference
+
+Use `sample.py`, see bottom of script for arguments. 
