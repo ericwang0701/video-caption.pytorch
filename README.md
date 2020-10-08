@@ -18,7 +18,7 @@ For any model folder, just check `opt_info.json` in the folder for model configu
 Date | Announcement
 :----:|:-----------------------------------:|
 Nov 8 2018 | Pretrained model and NasNet-A Large features now available for MSVD. Ran for 1000 epochs. Bleu4=0.38.  
-
+Oct 8 2020 | Updated links for checkpoints and processed data. 
 
 
 # Setup:
